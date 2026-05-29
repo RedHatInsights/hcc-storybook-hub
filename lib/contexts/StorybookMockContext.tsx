@@ -1,6 +1,6 @@
 import React, { type ReactNode, createContext, useContext } from 'react';
 
-export type Environment = 'production' | 'staging';
+export type Environment = 'production' | 'staging' | 'stage';
 
 export interface MockUserIdentity {
   account_number?: string;
