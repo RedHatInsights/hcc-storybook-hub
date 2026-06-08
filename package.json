@@ -1,6 +1,6 @@
 {
   "name": "@redhat-cloud-services/hcc-storybook-hub",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Composed meta Storybook + shared config for HCC frontend applications",
   "main": "./dist/index.js",
   "exports": {
