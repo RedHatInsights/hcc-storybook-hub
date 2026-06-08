@@ -91,7 +91,7 @@ export default function useChrome() {
       getUserPermissions: (app: string) =>
         Promise.resolve(
           mockRef.current.permissions
-            .filter((p) => p.startsWith(`${app}:`) || p.startsWith('*:'))
+            .filter((p) => p.startsWith(`${app}:`))
             .map((permission) => ({ permission, resourceDefinitions: [] }))
         ),
 
