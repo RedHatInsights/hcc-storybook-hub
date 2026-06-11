@@ -96,8 +96,14 @@ const defaultState: MockState = {
 
 export const StorybookMockContext = createContext<MockState>(defaultState);
 
-interface ProviderProps extends Partial<MockState> {
+interface ProviderProps {
   children: ReactNode;
+  environment?: Environment;
+  isOrgAdmin?: boolean;
+  permissions?: string[];
+  workspacePermissions?: Partial<WorkspacePermissionsMap>;
+  tenantPermissions?: Partial<TenantPermissionsMap>;
+  userIdentity?: MockUserIdentity;
 }
 
 export const StorybookMockProvider: React.FC<ProviderProps> = ({
