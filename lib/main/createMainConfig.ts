@@ -122,5 +122,7 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
     config.staticDirs = staticDirs;
   }
 
+  config.previewBody = () => '<div id="chrome-app-render-root"></div>';
+
   return config;
 }

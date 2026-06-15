@@ -1,6 +1,6 @@
 export { HccStorybookProvider } from './providers/HccStorybookProvider';
 export { hccPreviewDefaults } from './preview/hccPreviewDefaults';
-export { configureChromeMock, chromeSpies } from './mocks/useChrome';
+export { chromeSpies } from './mocks/useChrome';
 export {
   StorybookMockContext,
   StorybookMockProvider,

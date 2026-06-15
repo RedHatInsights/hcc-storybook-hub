@@ -66,6 +66,8 @@ export const EMPTY_TENANT_PERMISSIONS: TenantPermissionsMap = {
 };
 
 export interface MockState {
+  bundle: string;
+  app: string;
   environment: Environment;
   isOrgAdmin: boolean;
   permissions: string[];
@@ -87,6 +89,8 @@ export interface StoryParameters {
 }
 
 const defaultState: MockState = {
+  bundle: 'insights',
+  app: 'unknown',
   environment: 'stage',
   isOrgAdmin: false,
   permissions: [],
@@ -98,6 +102,8 @@ export const StorybookMockContext = createContext<MockState>(defaultState);
 
 interface ProviderProps {
   children: ReactNode;
+  bundle?: string;
+  app?: string;
   environment?: Environment;
   isOrgAdmin?: boolean;
   permissions?: string[];
@@ -108,6 +114,8 @@ interface ProviderProps {
 
 export const StorybookMockProvider: React.FC<ProviderProps> = ({
   children,
+  bundle = 'insights',
+  app = 'unknown',
   environment = 'stage',
   isOrgAdmin = false,
   permissions = [],
@@ -117,6 +125,8 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
 }) => {
   const value = useMemo<MockState>(
     () => ({
+      bundle,
+      app,
       environment,
       isOrgAdmin,
       permissions,
@@ -124,7 +134,7 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
       tenantPermissions: { ...EMPTY_TENANT_PERMISSIONS, ...tenantPermissions },
       userIdentity,
     }),
-    [environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, userIdentity],
+    [bundle, app, environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, userIdentity],
   );
   return <StorybookMockContext.Provider value={value}>{children}</StorybookMockContext.Provider>;
 };

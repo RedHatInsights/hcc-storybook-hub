@@ -2,7 +2,6 @@ import React, { type ReactNode } from 'react';
 import { StorybookMockProvider } from '../contexts/StorybookMockContext';
 import type { Environment, MockUserIdentity, WorkspacePermissionsMap, TenantPermissionsMap } from '../contexts/StorybookMockContext';
 import { FeatureFlagsProvider } from './FeatureFlagsProvider';
-import { configureChromeMock } from '../mocks/useChrome';
 
 interface HccStorybookProviderProps {
   bundle: string;
@@ -17,12 +16,6 @@ interface HccStorybookProviderProps {
   userIdentity?: MockUserIdentity;
 }
 
-if (typeof document !== 'undefined' && !document.getElementById('chrome-app-render-root')) {
-  const portalRoot = document.createElement('div');
-  portalRoot.id = 'chrome-app-render-root';
-  document.body.appendChild(portalRoot);
-}
-
 export const HccStorybookProvider: React.FC<HccStorybookProviderProps> = ({
   bundle,
   app,
@@ -35,10 +28,10 @@ export const HccStorybookProvider: React.FC<HccStorybookProviderProps> = ({
   tenantPermissions,
   userIdentity,
 }) => {
-  configureChromeMock({ bundle, app });
-
   return (
     <StorybookMockProvider
+      bundle={bundle}
+      app={app}
       environment={environment}
       isOrgAdmin={isOrgAdmin}
       permissions={permissions}

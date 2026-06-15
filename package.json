@@ -5,10 +5,7 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./config": {
-      "import": "./dist/config.mjs",
-      "require": "./dist/config.js"
-    },
+    "./config": "./dist/config.mjs",
     "./mocks/*": "./dist/mocks/*.js",
     "./css/storybook.css": "./lib/css/storybook.css"
   },
@@ -33,7 +30,7 @@
     "@storybook/addon-webpack5-compiler-swc": "^4.0.0",
     "@storybook/react-webpack5": "^10.2.0",
     "@storybook/test-runner": "^0.24.0",
-    "chromatic": "^13.3.0",
+    "chromatic": "^17.0.0",
     "eslint-plugin-storybook": "^10.2.0",
     "msw": "^2.12.0",
     "msw-storybook-addon": "^2.0.6",

@@ -12,12 +12,6 @@ function getSpy(path: string): ReturnType<typeof fn> {
   return chromeSpies.get(path)!;
 }
 
-let _config: Record<string, unknown> = {};
-
-export function configureChromeMock(config: Record<string, unknown>) {
-  _config = config;
-}
-
 export default function useChrome() {
   const mock = useMockState();
   const mockRef = useRef(mock);
@@ -37,8 +31,8 @@ export default function useChrome() {
         return mockRef.current.environment === 'production';
       },
       isBeta: () => false,
-      getBundle: () => _config.bundle || 'insights',
-      getApp: () => _config.app || 'unknown',
+      getBundle: () => mockRef.current.bundle,
+      getApp: () => mockRef.current.app,
 
       auth: {
         getToken: () => Promise.resolve('mock-token-12345'),
@@ -97,7 +91,7 @@ export default function useChrome() {
 
       get quickStarts() {
         return {
-          Catalog: (_config as any).quickStartsCatalog || DefaultCatalog,
+          Catalog: DefaultCatalog,
           set: getSpy('quickStarts.set'),
           toggle: getSpy('quickStarts.toggle'),
           version: 1,
@@ -118,7 +112,7 @@ export default function useChrome() {
       isDemo: () => false,
       forceDemo: getSpy('forceDemo'),
       getAvailableBundles: () => [],
-      getBundleData: () => ({ bundleId: (_config.bundle as string) || 'insights', bundleTitle: 'Insights' }),
+      getBundleData: () => ({ bundleId: mockRef.current.bundle, bundleTitle: 'Insights' }),
       globalFilterScope: getSpy('globalFilterScope'),
       hideGlobalFilter: getSpy('hideGlobalFilter'),
       removeGlobalFilter: getSpy('removeGlobalFilter'),
