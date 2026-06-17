@@ -1,11 +1,11 @@
 {
   "name": "@redhat-cloud-services/hcc-storybook-hub",
-  "version": "0.1.1",
-  "description": "Composed meta Storybook + shared config for HCC frontend applications",
+  "version": "0.2.0",
+  "description": "Single Storybook dependency for HCC frontend applications",
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./main-config": "./dist/main-config.mjs",
+    "./config": "./dist/config.mjs",
     "./mocks/*": "./dist/mocks/*.js",
     "./css/storybook.css": "./lib/css/storybook.css"
   },
@@ -22,9 +22,19 @@
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0",
-    "storybook": "^9.0.0 || ^10.0.0",
-    "@storybook/react-webpack5": "^9.0.0 || ^10.0.0"
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@storybook/addon-a11y": "^10.2.0",
+    "@storybook/addon-docs": "^10.2.0",
+    "@storybook/addon-webpack5-compiler-swc": "^4.0.0",
+    "@storybook/react-webpack5": "^10.2.0",
+    "@storybook/test-runner": "^0.24.0",
+    "chromatic": "^17.0.0",
+    "eslint-plugin-storybook": "^10.2.0",
+    "msw": "^2.12.0",
+    "msw-storybook-addon": "^2.0.6",
+    "storybook": "^10.2.0"
   },
   "scripts": {
     "build": "tsup",
@@ -34,15 +44,10 @@
     "serve-all": "./scripts/serve-all.sh"
   },
   "devDependencies": {
-    "@storybook/addon-docs": "^10.2.0",
-    "@storybook/addon-webpack5-compiler-swc": "^4.0.0",
-    "@storybook/react-webpack5": "^10.2.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
-    "chromatic": "^17.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "storybook": "^10.2.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }

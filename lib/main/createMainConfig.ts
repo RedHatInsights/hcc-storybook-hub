@@ -1,5 +1,4 @@
-import path from 'path';
-import { fileURLToPath } from 'url';
+declare var __dirname: string;
 
 interface CreateMainConfigOptions {
   stories?: string[];
@@ -59,11 +58,6 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
 
   addons.push(...extraAddons);
 
-  const currentDir = typeof __dirname !== 'undefined'
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
-  const hubMocksDir = path.resolve(currentDir, 'mocks');
-
   const config: Record<string, any> = {
     stories,
     addons,
@@ -82,6 +76,13 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
       },
     },
     webpackFinal: async (webpackConfig: any) => {
+      const path = await import('path');
+      const { fileURLToPath } = await import('url');
+      const currentDir = typeof __dirname !== 'undefined'
+        ? __dirname
+        : path.dirname(fileURLToPath(import.meta.url));
+      const hubMocksDir = path.resolve(currentDir, 'mocks');
+
       webpackConfig.resolve = {
         ...webpackConfig.resolve,
         alias: {
@@ -120,6 +121,8 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
   if (staticDirs) {
     config.staticDirs = staticDirs;
   }
+
+  config.previewBody = () => '<div id="chrome-app-render-root"></div>';
 
   return config;
 }

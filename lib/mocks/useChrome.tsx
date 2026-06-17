@@ -1,43 +1,15 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { fn } from 'storybook/test';
 import { useMockState } from '../contexts/StorybookMockContext';
+import { DefaultCatalog } from './DefaultCatalog';
 
-export const chromeAppNavClickSpy = fn();
+export const chromeSpies = new Map<string, ReturnType<typeof fn>>();
 
-interface ChromeConfig {
-  bundle?: string;
-  app?: string;
-  quickStartsCatalog?: React.FC;
-}
-
-const defaultTutorials = [
-  { id: 'getting-started', title: 'Getting Started', description: 'Learn the basics.', time: '10 min', level: 'Beginner' },
-  { id: 'custom-roles', title: 'Creating Custom Roles', description: 'Configure custom roles.', time: '15 min', level: 'Intermediate' },
-  { id: 'user-groups', title: 'Managing User Groups', description: 'Organize users into groups.', time: '12 min', level: 'Beginner' },
-  { id: 'workspaces', title: 'Workspace Administration', description: 'Master workspace management.', time: '20 min', level: 'Advanced' },
-];
-
-const DefaultCatalog: React.FC = () => (
-  <div style={{ padding: '24px' }}>
-    <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: 300 }}>Quick starts</h2>
-    <p style={{ color: '#6a6e73', margin: '0 0 24px', fontSize: '14px' }}>
-      Step-by-step instructions and guided tours.
-    </p>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
-      {defaultTutorials.map((t) => (
-        <div key={t.id} style={{ border: '1px solid #d2d2d2', borderRadius: '8px', padding: '16px' }}>
-          <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: 600 }}>{t.title}</h3>
-          <p style={{ margin: '0', fontSize: '14px', color: '#6a6e73' }}>{t.description}</p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-let _config: ChromeConfig = {};
-
-export function configureChromeMock(config: ChromeConfig) {
-  _config = config;
+function getSpy(path: string): ReturnType<typeof fn> {
+  if (!chromeSpies.has(path)) {
+    chromeSpies.set(path, fn().mockName(path));
+  }
+  return chromeSpies.get(path)!;
 }
 
 export default function useChrome() {
@@ -59,8 +31,8 @@ export default function useChrome() {
         return mockRef.current.environment === 'production';
       },
       isBeta: () => false,
-      getBundle: () => _config.bundle || 'insights',
-      getApp: () => _config.app || 'unknown',
+      getBundle: () => mockRef.current.bundle,
+      getApp: () => mockRef.current.app,
 
       auth: {
         getToken: () => Promise.resolve('mock-token-12345'),
@@ -86,28 +58,117 @@ export default function useChrome() {
             entitlements: id?.entitlements ?? {},
           });
         },
+        getOfflineToken: () => Promise.resolve('mock-offline-token'),
+        getRefreshToken: () => Promise.resolve('mock-refresh-token'),
+        login: () => Promise.resolve(),
+        logout: getSpy('auth.logout'),
+        reAuthWithScopes: () => Promise.resolve(),
       },
 
       getUserPermissions: (app: string) =>
         Promise.resolve(
           mockRef.current.permissions
-            .filter((p) => p.startsWith(`${app}:`) || p.startsWith('*:'))
-            .map((permission) => ({ permission, resourceDefinitions: [] }))
+            .filter((p: string) => p.startsWith(`${app}:`))
+            .map((permission: string) => ({ permission, resourceDefinitions: [] }))
         ),
 
-      appNavClick: chromeAppNavClickSpy,
-      appObjectId: () => {},
-      appAction: () => {},
+      appNavClick: getSpy('appNavClick'),
+      appObjectId: getSpy('appObjectId'),
+      appAction: getSpy('appAction'),
+      addWsEventListener: (_eventType: string, _callback: Function) => {
+        return () => {};
+      },
+      drawerActions: {
+        toggleDrawerContent: getSpy('drawerActions.toggleDrawerContent'),
+        setDrawerPanelContent: getSpy('drawerActions.setDrawerPanelContent'),
+        toggleDrawerPanel: getSpy('drawerActions.toggleDrawerPanel'),
+      },
       updateDocumentTitle: (title: string) => {
         if (typeof document !== 'undefined') {
           document.title = title;
         }
       },
 
-      quickStarts: {
-        Catalog: _config.quickStartsCatalog || DefaultCatalog,
-        set: () => {},
-        toggle: () => {},
+      get quickStarts() {
+        return {
+          Catalog: DefaultCatalog,
+          set: getSpy('quickStarts.set'),
+          toggle: getSpy('quickStarts.toggle'),
+          version: 1,
+          activateQuickstart: () => Promise.resolve(),
+        };
+      },
+
+      // Commonly accessed properties that should return safe defaults
+      initialized: true,
+      isChrome2: true,
+      experimentalApi: false,
+      isFedramp: false,
+      chromeHistory: { push: getSpy('chromeHistory.push'), replace: getSpy('chromeHistory.replace'), listen: () => () => {} },
+      identifyApp: getSpy('identifyApp'),
+      on: (_event: string, _callback: Function) => () => {},
+      init: getSpy('init'),
+      isPenTest: () => false,
+      isDemo: () => false,
+      forceDemo: getSpy('forceDemo'),
+      getAvailableBundles: () => [],
+      getBundleData: () => ({ bundleId: mockRef.current.bundle, bundleTitle: 'Insights' }),
+      globalFilterScope: getSpy('globalFilterScope'),
+      hideGlobalFilter: getSpy('hideGlobalFilter'),
+      removeGlobalFilter: getSpy('removeGlobalFilter'),
+      mapGlobalFilter: getSpy('mapGlobalFilter'),
+      navigation: getSpy('navigation'),
+      registerModule: getSpy('registerModule'),
+      createCase: getSpy('createCase'),
+      toggleFeedbackModal: getSpy('toggleFeedbackModal'),
+      toggleDebuggerModal: getSpy('toggleDebuggerModal'),
+      enableDebugging: getSpy('enableDebugging'),
+      usePendoFeedback: getSpy('usePendoFeedback'),
+      enablePackagesDebug: getSpy('enablePackagesDebug'),
+      requestPdf: () => Promise.resolve(),
+      isAnsibleTrialFlagActive: () => false,
+      setAnsibleTrialFlag: getSpy('setAnsibleTrialFlag'),
+      clearAnsibleTrialFlag: getSpy('clearAnsibleTrialFlag'),
+      segment: { setPageMetadata: getSpy('segment.setPageMetadata') },
+      useGlobalFilter: () => undefined,
+      visibilityFunctions: {
+        isOrgAdmin: () => Promise.resolve(mockRef.current.isOrgAdmin),
+        isActive: () => Promise.resolve(true),
+        isInternal: () => Promise.resolve(false),
+        isEntitled: () => Promise.resolve({}),
+        isProd: () => mockRef.current.environment === 'production',
+        isBeta: () => false,
+        isHidden: () => true as const,
+        withEmail: () => Promise.resolve(true),
+        loosePermissions: () => Promise.resolve(true),
+        loosePermissionsKessel: () => Promise.resolve(true),
+        hasPermissions: () => Promise.resolve(true),
+        hasLocalStorage: () => false,
+        hasCookie: () => false,
+        apiRequest: () => Promise.resolve(true),
+        featureFlag: () => false,
+      },
+      helpTopics: {
+        addHelpTopics: getSpy('helpTopics.addHelpTopics'),
+        enableTopics: () => Promise.resolve([]),
+        disableTopics: getSpy('helpTopics.disableTopics'),
+        setActiveTopic: () => Promise.resolve(),
+        closeHelpTopic: getSpy('helpTopics.closeHelpTopic'),
+      },
+      enable: {
+        iqe: getSpy('enable.iqe'),
+        remediationsDebug: getSpy('enable.remediationsDebug'),
+        invTags: getSpy('enable.invTags'),
+        shortSession: getSpy('enable.shortSession'),
+        jwtDebug: getSpy('enable.jwtDebug'),
+        reduxDebug: getSpy('enable.reduxDebug'),
+        forcePendo: getSpy('enable.forcePendo'),
+        allDetails: getSpy('enable.allDetails'),
+        inventoryDrawer: getSpy('enable.inventoryDrawer'),
+        globalFilter: getSpy('enable.globalFilter'),
+        appFilter: getSpy('enable.appFilter'),
+        contextSwitcher: getSpy('enable.contextSwitcher'),
+        quickstartsDebug: getSpy('enable.quickstartsDebug'),
       },
     };
   }
