@@ -1,0 +1,27 @@
+# Build & configuration
+.github/
+.storybook/
+tsup.config.ts
+tsconfig.lib.json
+scripts/
+
+# Development files
+.gitignore
+CODEOWNERS
+
+# Documentation (README.md is always included by npm)
+docs/
+*.md
+!README.md
+
+# Source files (compiled output in dist/ is published)
+src/
+lib/!(css)
+lib/**/*.ts
+
+# Storybook static output
+storybook-static/
+
+# Package manager files
+package-lock.json
+node_modules/
