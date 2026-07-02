@@ -140,6 +140,23 @@ permissions={['notifications:*:*', 'integrations:endpoints:read']}
 
 Most apps only use v1 permissions today. If your components don't call `useSelfAccessCheck`, you can skip `workspacePermissions` and `tenantPermissions`.
 
+**Per-role write permissions (`writableRoleIds`)**
+
+By default, `tenantPermissions.rbac_roles_write: true` grants write access to *all* roles. In practice, system-managed roles (like "Default admin access") should be read-only — only custom roles should be editable.
+
+`writableRoleIds` lets you specify exactly which role IDs the user can edit or delete. When set, `useSelfAccessCheck` for `rbac_roles_write` checks if the specific role's ID is in this list instead of using the blanket boolean.
+
+```tsx
+<HccStorybookProvider
+  tenantPermissions={{ rbac_roles_read: true, rbac_roles_write: true }}
+  // Only these two custom roles are editable/deletable.
+  // System roles like 'default-admin-access' will show as read-only.
+  writableRoleIds={['role-custom-devops', 'role-custom-viewer']}
+>
+```
+
+When omitted, the standard `rbac_roles_write` boolean applies to all roles equally — either all writable or all read-only.
+
 Stories that test restricted access can override the defaults:
 
 ```tsx

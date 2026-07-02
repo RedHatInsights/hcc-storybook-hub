@@ -73,6 +73,26 @@ export interface MockState {
   permissions: string[];
   workspacePermissions: WorkspacePermissionsMap;
   tenantPermissions: TenantPermissionsMap;
+  /**
+   * Per-resource write permission allowlist for roles.
+   *
+   * When set, `useSelfAccessCheck` checks if a specific role ID is in this
+   * list instead of using the blanket `rbac_roles_write` tenant permission.
+   * This allows stories to test fine-grained edit/delete permissions where
+   * some roles are writable and others are system-managed (read-only).
+   *
+   * When undefined, the standard `tenantPermissions.rbac_roles_write` boolean
+   * controls write access for all roles.
+   *
+   * @example
+   * // Only 'role-custom-1' and 'role-custom-2' are editable/deletable;
+   * // system roles like 'role-default-admin' will be read-only.
+   * <HccStorybookProvider
+   *   writableRoleIds={['role-custom-1', 'role-custom-2']}
+   *   tenantPermissions={{ rbac_roles_read: true, rbac_roles_write: true }}
+   * >
+   */
+  writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
 }
 
@@ -83,6 +103,7 @@ export interface StoryParameters {
   environment?: 'stage' | 'production';
   workspacePermissions?: Partial<WorkspacePermissionsMap>;
   tenantPermissions?: Partial<TenantPermissionsMap>;
+  writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
   featureFlags?: Record<string, boolean>;
   msw?: { handlers: unknown[] };
@@ -109,6 +130,8 @@ interface ProviderProps {
   permissions?: string[];
   workspacePermissions?: Partial<WorkspacePermissionsMap>;
   tenantPermissions?: Partial<TenantPermissionsMap>;
+  /** Per-role write allowlist. See MockState.writableRoleIds for details. */
+  writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
 }
 
@@ -121,6 +144,7 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
   permissions = [],
   workspacePermissions = EMPTY_WORKSPACE_PERMISSIONS,
   tenantPermissions = EMPTY_TENANT_PERMISSIONS,
+  writableRoleIds,
   userIdentity,
 }) => {
   const value = useMemo<MockState>(
@@ -132,9 +156,10 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
       permissions,
       workspacePermissions: { ...EMPTY_WORKSPACE_PERMISSIONS, ...workspacePermissions },
       tenantPermissions: { ...EMPTY_TENANT_PERMISSIONS, ...tenantPermissions },
+      writableRoleIds,
       userIdentity,
     }),
-    [bundle, app, environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, userIdentity],
+    [bundle, app, environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, writableRoleIds, userIdentity],
   );
   return <StorybookMockContext.Provider value={value}>{children}</StorybookMockContext.Provider>;
 };
