@@ -8,3 +8,6 @@
 # CODEOWNERS file itself requires admin review to prevent bypass attacks
 # Must come after wildcard so this rule takes precedence (last match wins)
 CODEOWNERS @RedHatInsights/experience-ui-admins
+
+# Protect .npmignore file - package contents control
+.npmignore @RedHatInsights/experience-ui-admins

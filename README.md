@@ -53,6 +53,23 @@ hcc/
 
 The script builds each repo's Storybook, serves it on a local port, and starts this meta Storybook on port 6006.
 
+## Published package contents
+
+The npm package includes only production artifacts:
+
+- `dist/` — compiled JS, ESM, and type declarations (built by `tsup`)
+- `lib/css/` — shared Storybook CSS
+- `README.md` and `package.json`
+
+Everything else (source code, config, scripts, Storybook config, docs) is excluded. The `"files"` field in `package.json` acts as the primary allowlist, and `.npmignore` provides a secondary exclusion layer. To verify what gets published, run:
+
+```bash
+npm run build
+npm pack --dry-run
+```
+
+Changes to `.npmignore` require review from `@RedHatInsights/console-framework-leads` (see `CODEOWNERS`).
+
 ## What this is (and isn't)
 
 This is a **discovery and browsing hub**. It gives you one place to view all HCC component stories without tracking down individual Storybook deployments.
