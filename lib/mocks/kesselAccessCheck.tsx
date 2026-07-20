@@ -20,7 +20,19 @@ type BulkWithTopRelation = { relation: string; resources: Resource[] };
 type BulkWithPerResourceRelation = { resources: (Resource & { relation: string })[] };
 type UseSelfAccessCheckOptions = SingleParams | BulkWithTopRelation | BulkWithPerResourceRelation;
 
-function checkTenantPermission(relation: string, tenantPerms: TenantPermissionsMap): boolean {
+/**
+ * Check tenant-level permissions with optional per-role write granularity.
+ *
+ * For most relations, this returns the boolean from tenantPermissions.
+ * For `rbac_roles_write`, if writableRoleIds is set, it checks whether
+ * the specific resource ID is in the allowlist — enabling stories to
+ * test scenarios where only certain custom roles are editable while
+ * system-managed roles remain read-only.
+ */
+function checkTenantPermission(relation: string, tenantPerms: TenantPermissionsMap, resource: Resource, writableRoleIds?: string[]): boolean {
+  if (writableRoleIds !== undefined && relation === 'rbac_roles_write') {
+    return writableRoleIds.includes(resource.id);
+  }
   return tenantPerms[relation as keyof TenantPermissionsMap] ?? false;
 }
 
@@ -72,7 +84,14 @@ export const useSelfAccessCheck = (params: UseSelfAccessCheckOptions) => {
   mockRef.current = mock;
 
   const resolvePermission = (relation: string, resource: Resource): boolean => {
-    if (resource.type === 'tenant') return checkTenantPermission(relation, mockRef.current.tenantPermissions);
+    if (resource.type === 'tenant') return checkTenantPermission(relation, mockRef.current.tenantPermissions, resource, mockRef.current.writableRoleIds);
+    if (resource.type === 'role') {
+      const { writableRoleIds } = mockRef.current;
+      if (writableRoleIds !== undefined) {
+        return relation === 'rbac_roles_write' && writableRoleIds.includes(resource.id);
+      }
+      return checkTenantPermission(relation, mockRef.current.tenantPermissions, resource);
+    }
     return checkWorkspacePermission(relation, resource.id, mockRef.current.workspacePermissions);
   };
 
