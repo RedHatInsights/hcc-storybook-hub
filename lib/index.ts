@@ -18,3 +18,4 @@ export type {
 } from './contexts/StorybookMockContext';
 export { FeatureFlagsProvider, FeatureFlagsContext } from './providers/FeatureFlagsProvider';
 export type { FeatureFlagsConfig } from './providers/FeatureFlagsProvider';
+export { deriveTenantPermissions } from './helpers/derive-tenant-permissions';
