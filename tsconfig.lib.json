@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "declaration": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "lib",
+    "ignoreDeprecations": "6.0"
+  },
+  "include": ["lib/**/*"],
+  "exclude": ["node_modules", "dist", ".storybook", "src"]
+}
