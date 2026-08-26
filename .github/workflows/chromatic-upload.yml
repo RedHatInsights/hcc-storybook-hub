@@ -31,8 +31,30 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Check for maintainer approval
+        id: check-label
+        if: github.event.workflow_run.event == 'pull_request'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const prs = context.payload.workflow_run.pull_requests;
+            if (prs && prs.length > 0) {
+              const prNumber = prs[0].number;
+              const { data: pr } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+              });
+              const hasLabel = pr.labels.some(label => label.name === 'maintainer-approved');
+              return hasLabel;
+            }
+            return true;
+
       - name: Publish to Chromatic
         id: chromatic
+        if: >
+          github.event.workflow_run.event == 'push' ||
+          (github.event.workflow_run.event == 'pull_request' && steps.check-label.outputs.result == 'true')
         uses: chromaui/action@c93e0bc3a63aa176e14a75b61a31847cbfdd341c # v1
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
