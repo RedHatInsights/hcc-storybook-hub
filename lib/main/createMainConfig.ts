@@ -4,10 +4,12 @@ interface CreateMainConfigOptions {
   stories?: string[];
   extraAddons?: any[];
   staticDirs?: string[];
+  /**
+   * Exact-match import aliases, applied through `viteFinal` (`resolve.alias`).
+   * Keys must be bare specifiers (e.g. `@scope/pkg/module`); they are matched
+   * exactly — subpath imports of an aliased specifier are not rewritten.
+   */
   extraAliases?: Record<string, string>;
-  extraWebpackRules?: any[];
-  webpackFallback?: Record<string, string | false>;
-  webpackPlugins?: any[];
   docs?: Record<string, any>;
   typescript?: Record<string, any>;
   remarkPlugins?: any[];
@@ -15,27 +17,28 @@ interface CreateMainConfigOptions {
   a11y?: boolean;
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export function createMainConfig(options: CreateMainConfigOptions = {}) {
   const {
-    stories = ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
+    stories = ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
     extraAddons = [],
     staticDirs,
     extraAliases = {},
-    extraWebpackRules = [],
-    webpackFallback,
-    webpackPlugins = [],
-    docs = { defaultName: 'Documentation' },
+    docs = { defaultName: "Documentation" },
     typescript,
     remarkPlugins,
     msw = true,
     a11y = true,
   } = options;
 
-  const addons: any[] = ['@storybook/addon-webpack5-compiler-swc'];
+  const addons: any[] = ["@storybook/addon-vitest"];
 
   if (remarkPlugins?.length) {
     addons.push({
-      name: '@storybook/addon-docs',
+      name: "@storybook/addon-docs",
       options: {
         mdxPluginOptions: {
           mdxCompileOptions: {
@@ -45,15 +48,15 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
       },
     });
   } else {
-    addons.push('@storybook/addon-docs');
+    addons.push("@storybook/addon-docs");
   }
 
   if (msw) {
-    addons.push('msw-storybook-addon');
+    addons.push("msw-storybook-addon");
   }
 
   if (a11y) {
-    addons.push('@storybook/addon-a11y');
+    addons.push("@storybook/addon-a11y");
   }
 
   addons.push(...extraAddons);
@@ -62,59 +65,57 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
     stories,
     addons,
     framework: {
-      name: '@storybook/react-webpack5',
+      name: "@storybook/react-vite",
       options: {},
     },
     docs,
     typescript: typescript ?? {
       check: false,
-      reactDocgen: 'react-docgen-typescript',
+      reactDocgen: "react-docgen-typescript",
       reactDocgenTypescriptOptions: {
         shouldExtractLiteralValuesFromEnum: true,
         propFilter: (prop: any) =>
           prop.parent ? !/node_modules/.test(prop.parent.fileName) : true,
       },
     },
-    webpackFinal: async (webpackConfig: any) => {
-      const path = await import('path');
-      const { fileURLToPath } = await import('url');
-      const currentDir = typeof __dirname !== 'undefined'
-        ? __dirname
-        : path.dirname(fileURLToPath(import.meta.url));
-      const hubMocksDir = path.resolve(currentDir, 'mocks');
+    viteFinal: async (viteConfig: any) => {
+      const path = await import("path");
+      const { fileURLToPath } = await import("url");
+      const currentDir =
+        typeof __dirname !== "undefined"
+          ? __dirname
+          : path.dirname(fileURLToPath(import.meta.url));
+      const hubMocksDir = path.resolve(currentDir, "mocks");
 
-      webpackConfig.resolve = {
-        ...webpackConfig.resolve,
-        alias: {
-          ...webpackConfig.resolve?.alias,
-          '@redhat-cloud-services/frontend-components/useChrome': path.join(hubMocksDir, 'useChrome.js'),
-          '@redhat-cloud-services/frontend-components-utilities/RBACHook': path.join(hubMocksDir, 'RBACHook.js'),
-          '@unleash/proxy-client-react': path.join(hubMocksDir, 'unleash.js'),
-          '@project-kessel/react-kessel-access-check': path.join(hubMocksDir, 'kesselAccessCheck.js'),
-          ...extraAliases,
-        },
-        fallback: {
-          ...webpackConfig.resolve?.fallback,
-          ...webpackFallback,
-        },
+      // Hub mocks + app-specific aliases. The webpack-era object alias map is
+      // converted to Vite's array form with exact-match regexes.
+      const aliases: Record<string, string> = {
+        "@redhat-cloud-services/frontend-components/useChrome": path.join(
+          hubMocksDir,
+          "useChrome.js",
+        ),
+        "@redhat-cloud-services/frontend-components-utilities/RBACHook":
+          path.join(hubMocksDir, "RBACHook.js"),
+        "@unleash/proxy-client-react": path.join(hubMocksDir, "unleash.js"),
+        "@project-kessel/react-kessel-access-check": path.join(
+          hubMocksDir,
+          "kesselAccessCheck.js",
+        ),
+        ...extraAliases,
       };
 
-      webpackConfig.module = webpackConfig.module || {};
-      webpackConfig.module.rules = webpackConfig.module.rules || [];
+      viteConfig.resolve = viteConfig.resolve ?? {};
+      viteConfig.resolve.alias = [
+        ...(Array.isArray(viteConfig.resolve.alias)
+          ? viteConfig.resolve.alias
+          : []),
+        ...Object.entries(aliases).map(([find, replacement]) => ({
+          find: new RegExp(`^${escapeRegExp(find)}$`),
+          replacement,
+        })),
+      ];
 
-      webpackConfig.module.rules.push({
-        test: /\.s[ac]ss$/i,
-        use: ['style-loader', 'css-loader', 'sass-loader'],
-      });
-
-      webpackConfig.module.rules.push(...extraWebpackRules);
-
-      if (webpackPlugins.length) {
-        webpackConfig.plugins = webpackConfig.plugins || [];
-        webpackConfig.plugins.push(...webpackPlugins);
-      }
-
-      return webpackConfig;
+      return viteConfig;
     },
   };
 

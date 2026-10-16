@@ -1,6 +1,6 @@
 # Getting Started with hcc-storybook-hub
 
-One package gives you a fully configured Storybook for HCC frontend applications: Storybook 10, webpack5, MSW, a11y, Chromatic, test runner, and mocks for all HCC platform libraries.
+One package gives you a fully configured Storybook for HCC frontend applications: Storybook 10 (Vite framework), MSW, a11y, Chromatic, the Vitest addon, and mocks for all HCC platform libraries.
 
 ## Setup
 
@@ -15,30 +15,30 @@ No other Storybook packages needed.
 ### 2. Create `.storybook/main.ts`
 
 ```ts
-import { createMainConfig } from '@redhat-cloud-services/hcc-storybook-hub/config';
+import { createMainConfig } from "@redhat-cloud-services/hcc-storybook-hub/config";
 
 export default createMainConfig({
-  staticDirs: ['../static'],
+  staticDirs: ["../static"],
 });
 ```
 
 ### 3. Create `.storybook/preview.tsx`
 
 ```tsx
-import type { Preview } from '@storybook/react-webpack5';
-import '@patternfly/react-core/dist/styles/base.css';
-import '@patternfly/patternfly/patternfly-addons.css';
-import '@redhat-cloud-services/hcc-storybook-hub/css/storybook.css';
-import { HccStorybookProvider } from '@redhat-cloud-services/hcc-storybook-hub';
-import { initialize, mswLoader } from 'msw-storybook-addon';
+import type { Preview } from "@storybook/react-vite";
+import "@patternfly/react-core/dist/styles/base.css";
+import "@patternfly/patternfly/patternfly-addons.css";
+import "@redhat-cloud-services/hcc-storybook-hub/css/storybook.css";
+import { HccStorybookProvider } from "@redhat-cloud-services/hcc-storybook-hub";
+import { initialize, mswLoader } from "msw-storybook-addon";
 
 const preview: Preview = {
   beforeAll: async () => {
-    initialize({ onUnhandledRequest: 'warn' });
+    initialize({ onUnhandledRequest: "warn" });
   },
   loaders: [mswLoader],
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
   decorators: [
     (Story, { parameters }) => (
@@ -46,9 +46,9 @@ const preview: Preview = {
         bundle="settings"
         app="notifications"
         permissions={[
-          'notifications:*:*',
-          'integrations:endpoints:read',
-          'integrations:endpoints:write',
+          "notifications:*:*",
+          "integrations:endpoints:read",
+          "integrations:endpoints:write",
         ]}
         featureFlags={parameters.featureFlags ?? {}}
       >
@@ -89,12 +89,12 @@ bundleSegments:
 
 Use these same values in `HccStorybookProvider`:
 
-| App | bundle (from frontend.yaml) | app (from package.json) |
-|---|---|---|
-| RBAC / User Access | `iam` | `rbac` |
-| Notifications | `settings` | `notifications` |
-| Sources | `settings` | `sources` |
-| Service Accounts | `iam` | `service-accounts` |
+| App                | bundle (from frontend.yaml) | app (from package.json) |
+| ------------------ | --------------------------- | ----------------------- |
+| RBAC / User Access | `iam`                       | `rbac`                  |
+| Notifications      | `settings`                  | `notifications`         |
+| Sources            | `settings`                  | `sources`               |
+| Service Accounts   | `iam`                       | `service-accounts`      |
 
 #### `permissions`
 
@@ -142,7 +142,7 @@ Most apps only use v1 permissions today. If your components don't call `useSelfA
 
 **Per-role write permissions (`writableRoleIds`)**
 
-By default, `tenantPermissions.rbac_roles_write: true` grants write access to *all* roles. In practice, system-managed roles (like "Default admin access") should be read-only — only custom roles should be editable.
+By default, `tenantPermissions.rbac_roles_write: true` grants write access to _all_ roles. In practice, system-managed roles (like "Default admin access") should be read-only — only custom roles should be editable.
 
 `writableRoleIds` lets you specify exactly which role IDs the user can edit or delete. When set, `useSelfAccessCheck` for `rbac_roles_write` checks if the specific role's ID is in this list instead of using the blanket boolean.
 
@@ -166,7 +166,7 @@ export const ReadOnlyUser: Story = {
       <HccStorybookProvider
         bundle="settings"
         app="notifications"
-        permissions={['notifications:events:read']}
+        permissions={["notifications:events:read"]}
       >
         <Story />
       </HccStorybookProvider>
@@ -254,7 +254,7 @@ Pass feature flags per-story via parameters:
 export const WithNewFeature: Story = {
   parameters: {
     featureFlags: {
-      'platform.notifications.overhaul': true,
+      "platform.notifications.overhaul": true,
     },
   },
 };
@@ -332,14 +332,14 @@ Customize the user returned by `useChrome().auth.getUser()`:
 Mock API responses per-story using MSW:
 
 ```tsx
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from "msw";
 
 export const WithData: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/notifications/v1/notifications', () =>
-          HttpResponse.json({ data: [{ id: '1', title: 'Test' }] })
+        http.get("/api/notifications/v1/notifications", () =>
+          HttpResponse.json({ data: [{ id: "1", title: "Test" }] }),
         ),
       ],
     },
@@ -352,15 +352,17 @@ export const WithData: Story = {
 All Chrome API functions that represent user actions are spies. Access them via the `chromeSpies` map:
 
 ```tsx
-import { chromeSpies } from '@redhat-cloud-services/hcc-storybook-hub';
-import { expect } from 'storybook/test';
+import { chromeSpies } from "@redhat-cloud-services/hcc-storybook-hub";
+import { expect } from "storybook/test";
 
 export const ClickNavigation: Story = {
   play: async ({ canvasElement }) => {
     // ... trigger a click that calls chrome.appNavClick
 
-    expect(chromeSpies.get('appNavClick')).toHaveBeenCalled();
-    expect(chromeSpies.get('drawerActions.toggleDrawerContent')).toHaveBeenCalledTimes(1);
+    expect(chromeSpies.get("appNavClick")).toHaveBeenCalled();
+    expect(
+      chromeSpies.get("drawerActions.toggleDrawerContent"),
+    ).toHaveBeenCalledTimes(1);
   },
 };
 ```
@@ -389,31 +391,27 @@ Wrap `<Story />` with your app's providers inside `HccStorybookProvider`:
 
 ## `createMainConfig` options
 
-| Option | Default | Description |
-|---|---|---|
-| `stories` | `['../src/**/*.mdx', '../src/**/*.stories.@(js\|jsx\|mjs\|ts\|tsx)']` | Story glob patterns |
-| `staticDirs` | none | Static asset directories |
-| `extraAliases` | `{}` | Additional webpack aliases for app-specific mocks |
-| `extraAddons` | `[]` | Additional Storybook addons |
-| `extraWebpackRules` | `[]` | Additional webpack module rules |
-| `webpackFallback` | none | webpack `resolve.fallback` (e.g. polyfills) |
-| `webpackPlugins` | `[]` | Additional webpack plugins |
-| `remarkPlugins` | none | remark plugins for MDX processing |
-| `msw` | `true` | Include MSW addon |
-| `a11y` | `true` | Include a11y addon |
-| `docs` | `{ defaultName: 'Documentation' }` | Storybook docs config |
-| `typescript` | react-docgen-typescript | TypeScript config |
+| Option          | Default                                                               | Description                                                                            |
+| --------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `stories`       | `['../src/**/*.mdx', '../src/**/*.stories.@(js\|jsx\|mjs\|ts\|tsx)']` | Story glob patterns                                                                    |
+| `staticDirs`    | none                                                                  | Static asset directories                                                               |
+| `extraAliases`  | `{}`                                                                  | Additional exact-match import aliases for app-specific mocks (applied via `viteFinal`) |
+| `extraAddons`   | `[]`                                                                  | Additional Storybook addons                                                            |
+| `remarkPlugins` | none                                                                  | remark plugins for MDX processing                                                      |
+| `msw`           | `true`                                                                | Include MSW addon                                                                      |
+| `a11y`          | `true`                                                                | Include a11y addon                                                                     |
+| `docs`          | `{ defaultName: 'Documentation' }`                                    | Storybook docs config                                                                  |
+| `typescript`    | react-docgen-typescript                                               | TypeScript config                                                                      |
 
 ## What's included
 
 The hub bundles these packages — don't install them separately:
 
 - `storybook` (v10)
-- `@storybook/react-webpack5`
+- `@storybook/react-vite`
 - `@storybook/addon-docs`
-- `@storybook/addon-webpack5-compiler-swc`
+- `@storybook/addon-vitest`
 - `@storybook/addon-a11y`
-- `@storybook/test-runner`
 - `msw` + `msw-storybook-addon`
 - `chromatic`
 - `eslint-plugin-storybook`
@@ -422,9 +420,47 @@ The hub bundles these packages — don't install them separately:
 
 When you use `createMainConfig`, these imports are automatically aliased to hub-provided mocks:
 
-| Import | Mock |
-|---|---|
-| `@redhat-cloud-services/frontend-components/useChrome` | Full Chrome API with spy registry |
-| `@redhat-cloud-services/frontend-components-utilities/RBACHook` | `usePermissions` with wildcard matching |
-| `@unleash/proxy-client-react` | `useFlag`, `FlagProvider`, `useFlagsStatus`, etc. |
-| `@project-kessel/react-kessel-access-check` | `useSelfAccessCheck`, `AccessCheck.Provider` |
+| Import                                                          | Mock                                              |
+| --------------------------------------------------------------- | ------------------------------------------------- |
+| `@redhat-cloud-services/frontend-components/useChrome`          | Full Chrome API with spy registry                 |
+| `@redhat-cloud-services/frontend-components-utilities/RBACHook` | `usePermissions` with wildcard matching           |
+| `@unleash/proxy-client-react`                                   | `useFlag`, `FlagProvider`, `useFlagsStatus`, etc. |
+| `@project-kessel/react-kessel-access-check`                     | `useSelfAccessCheck`, `AccessCheck.Provider`      |
+
+## Migrating from 0.2.x (webpack5) to 0.3.0 (Vite)
+
+0.3.0 is a breaking release: the framework switches from `@storybook/react-webpack5`
+to `@storybook/react-vite`, and the EOL jest-based `@storybook/test-runner` is
+replaced by `@storybook/addon-vitest` (Vitest browser mode). Consumers not ready
+to migrate should stay on `^0.2.2`.
+
+### Why
+
+- Storybook's jest-based test runner is EOL; the Vitest addon is the officially
+  supported test integration and requires a Vite-based framework.
+- The jest runner's dependency tree was also the source of chronic lockfile
+  breakage in MintMaker dependency-update PRs.
+
+### What changes for consumers
+
+1. **`.storybook/main.ts`** — no changes required if you use `createMainConfig`
+   defaults. Local webpack overrides (custom `webpackFinal`, `extraWebpackRules`,
+   `webpackFallback`, `webpackPlugins`) must be ported to `viteFinal` /
+   `extraAliases`. `import x from './file.yaml?raw'` is native in Vite — drop
+   any raw-loader rules for it.
+2. **`.storybook/preview.tsx`** — change the `Preview` type import from
+   `@storybook/react-webpack5` to `@storybook/react-vite`.
+3. **SCSS** — Vite compiles `.scss` natively when `sass` is installed. If you
+   import SCSS, add `sass` to your dev dependencies.
+4. **Runtime `require()`** — webpack tolerated `require()` inside story code;
+   the Vite/ESM browser runtime does not. Convert to static imports.
+5. **Test scripts** — replace the `test-storybook` CLI with
+   `vitest run --project=storybook`, and add a `storybook` project to your
+   `vitest.config.ts` (browser mode, `@vitest/browser-playwright`). Run
+   `npx storybook add @storybook/addon-vitest` in your app to generate the
+   Vitest integration, then merge with your existing config.
+6. **Known matcher limitation** — `storybook/test`'s bundled `@vitest/expect`
+   does not route `expect.any()` nested inside `expect.objectContaining()`.
+   Assert on plain values instead (destructure `spy.mock.calls`).
+
+A complete worked reference: [insights-rbac-ui PR #2468](https://github.com/RedHatInsights/insights-rbac-ui/pull/2468).
