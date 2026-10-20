@@ -1,6 +1,6 @@
 {
   "name": "@redhat-cloud-services/hcc-storybook-hub",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Single Storybook dependency for HCC frontend applications",
   "main": "./dist/index.js",
   "exports": {
@@ -27,9 +27,8 @@
   "dependencies": {
     "@storybook/addon-a11y": "^10.2.0",
     "@storybook/addon-docs": "^10.2.0",
-    "@storybook/addon-webpack5-compiler-swc": "^4.0.0",
-    "@storybook/react-webpack5": "^10.2.0",
-    "@storybook/test-runner": "^0.24.0",
+    "@storybook/addon-vitest": "^10.2.0",
+    "@storybook/react-vite": "^10.2.0",
     "chromatic": "^17.0.0",
     "eslint-plugin-storybook": "^10.2.0",
     "msw": "^2.12.0",
