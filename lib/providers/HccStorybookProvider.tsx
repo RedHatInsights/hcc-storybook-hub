@@ -1,6 +1,6 @@
 import React, { type ReactNode } from 'react';
 import { StorybookMockProvider } from '../contexts/StorybookMockContext';
-import type { Environment, MockUserIdentity, WorkspacePermissionsMap, TenantPermissionsMap } from '../contexts/StorybookMockContext';
+import type { Environment, MockUserIdentity, MockWorkspace, WorkspacePermissionsMap, TenantPermissionsMap } from '../contexts/StorybookMockContext';
 import { FeatureFlagsProvider } from './FeatureFlagsProvider';
 
 interface HccStorybookProviderProps {
@@ -37,6 +37,17 @@ interface HccStorybookProviderProps {
    */
   writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
+  /**
+   * Whether the org is opted into RBAC v2 — drives Chrome's mocked
+   * `isKesselOrgOnboarded` visibility function. Defaults to `false` (v1 org).
+   */
+  orgOptedIn?: boolean;
+  /**
+   * Workspace served by the mocked `fetchDefaultWorkspace` / `fetchRootWorkspace`.
+   * `undefined` (default) serves a sensible default workspace; `null` makes the
+   * fetch reject, simulating an org without workspaces.
+   */
+  defaultWorkspace?: MockWorkspace | null;
 }
 
 export const HccStorybookProvider: React.FC<HccStorybookProviderProps> = ({
@@ -51,6 +62,8 @@ export const HccStorybookProvider: React.FC<HccStorybookProviderProps> = ({
   tenantPermissions,
   writableRoleIds,
   userIdentity,
+  orgOptedIn,
+  defaultWorkspace,
 }) => {
   return (
     <StorybookMockProvider
@@ -63,6 +76,8 @@ export const HccStorybookProvider: React.FC<HccStorybookProviderProps> = ({
       tenantPermissions={tenantPermissions}
       writableRoleIds={writableRoleIds}
       userIdentity={userIdentity}
+      orgOptedIn={orgOptedIn}
+      defaultWorkspace={defaultWorkspace}
     >
       <FeatureFlagsProvider value={featureFlags}>
         {children}

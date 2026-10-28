@@ -1,6 +1,6 @@
 {
   "name": "@redhat-cloud-services/hcc-storybook-hub",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Single Storybook dependency for HCC frontend applications",
   "main": "./dist/index.js",
   "exports": {
@@ -36,13 +36,15 @@
     "storybook": "^10.2.0"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && npm run kessel-contract",
     "prepublishOnly": "npm run build",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "serve-all": "./scripts/serve-all.sh"
+    "serve-all": "./scripts/serve-all.sh",
+    "kessel-contract": "node scripts/check-kessel-contract.mjs"
   },
   "devDependencies": {
+    "@project-kessel/react-kessel-access-check": "^0.5.7",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "react": "^18.3.1",
