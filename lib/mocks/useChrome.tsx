@@ -147,6 +147,15 @@ export default function useChrome() {
         hasCookie: () => false,
         apiRequest: () => Promise.resolve(true),
         featureFlag: () => false,
+        /**
+         * Mirrors insights-chrome's real implementation (VisibilitySingleton),
+         * backed by `GET /api/rbac/v1/tenant/opt-in/`. Here it resolves from
+         * MockState (`orgOptedIn`). Like the real function it is async and
+         * returns a boolean; stories control it via the `orgOptedIn` story
+         * parameter.
+         */
+        isKesselOrgOnboarded: (expected: boolean) =>
+          Promise.resolve(mockRef.current.orgOptedIn === expected),
       },
       helpTopics: {
         addHelpTopics: getSpy('helpTopics.addHelpTopics'),

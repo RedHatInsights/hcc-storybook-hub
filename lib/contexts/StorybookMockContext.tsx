@@ -1,4 +1,5 @@
 import React, { type ReactNode, createContext, useContext, useMemo } from 'react';
+import { syncKesselMockState } from '../mocks/kesselMockStateRegistry';
 
 export type Environment = 'production' | 'stage';
 
@@ -65,6 +66,26 @@ export const EMPTY_TENANT_PERMISSIONS: TenantPermissionsMap = {
   rbac_workspace_move: false,
 };
 
+export interface MockWorkspace {
+  id: string;
+  name: string;
+  description?: string | null;
+  type: 'default' | 'root' | 'custom';
+  parent_id?: string | null;
+  created?: string;
+  modified?: string;
+}
+
+export const DEFAULT_MOCK_WORKSPACE: MockWorkspace = {
+  id: 'default-workspace-123',
+  name: 'Default Workspace',
+  description: 'Organization default workspace',
+  type: 'default',
+  parent_id: 'root-workspace-123',
+  created: '2026-01-01T00:00:00Z',
+  modified: '2026-01-01T00:00:00Z',
+};
+
 export interface MockState {
   bundle: string;
   app: string;
@@ -73,6 +94,19 @@ export interface MockState {
   permissions: string[];
   workspacePermissions: WorkspacePermissionsMap;
   tenantPermissions: TenantPermissionsMap;
+  /**
+   * Whether the org is opted into RBAC v2 — the signal behind Chrome's
+   * `isKesselOrgOnboarded` visibility function. Defaults to `false` (v1 org),
+   * matching the pre-v2 state so stories that don't care stay unchanged.
+   */
+  orgOptedIn: boolean;
+  /**
+   * The workspace served by the mocked `fetchDefaultWorkspace` /
+   * `fetchRootWorkspace`. `undefined` serves a sensible default workspace;
+   * `null` makes the fetch reject with a 404-style error, simulating an org
+   * without workspaces.
+   */
+  defaultWorkspace: MockWorkspace | null;
   /**
    * Per-resource write permission allowlist for roles.
    *
@@ -105,6 +139,10 @@ export interface StoryParameters {
   tenantPermissions?: Partial<TenantPermissionsMap>;
   writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
+  /** Whether the org is opted into RBAC v2 (drives `isKesselOrgOnboarded`). */
+  orgOptedIn?: boolean;
+  /** Workspace served by the mocked workspace fetchers; `null` = fetch fails. */
+  defaultWorkspace?: MockWorkspace | null;
   featureFlags?: Record<string, boolean>;
   msw?: { handlers: unknown[] };
 }
@@ -117,6 +155,8 @@ const defaultState: MockState = {
   permissions: [],
   workspacePermissions: EMPTY_WORKSPACE_PERMISSIONS,
   tenantPermissions: EMPTY_TENANT_PERMISSIONS,
+  orgOptedIn: false,
+  defaultWorkspace: DEFAULT_MOCK_WORKSPACE,
 };
 
 export const StorybookMockContext = createContext<MockState>(defaultState);
@@ -133,6 +173,10 @@ interface ProviderProps {
   /** Per-role write allowlist. See MockState.writableRoleIds for details. */
   writableRoleIds?: string[];
   userIdentity?: MockUserIdentity;
+  /** Whether the org is opted into RBAC v2 (drives `isKesselOrgOnboarded`). */
+  orgOptedIn?: boolean;
+  /** Workspace served by the mocked workspace fetchers; `null` = fetch fails. */
+  defaultWorkspace?: MockWorkspace | null;
 }
 
 export const StorybookMockProvider: React.FC<ProviderProps> = ({
@@ -146,6 +190,8 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
   tenantPermissions = EMPTY_TENANT_PERMISSIONS,
   writableRoleIds,
   userIdentity,
+  orgOptedIn = false,
+  defaultWorkspace,
 }) => {
   const value = useMemo<MockState>(
     () => ({
@@ -158,9 +204,16 @@ export const StorybookMockProvider: React.FC<ProviderProps> = ({
       tenantPermissions: { ...EMPTY_TENANT_PERMISSIONS, ...tenantPermissions },
       writableRoleIds,
       userIdentity,
+      orgOptedIn,
+      defaultWorkspace: defaultWorkspace === undefined ? DEFAULT_MOCK_WORKSPACE : defaultWorkspace,
     }),
-    [bundle, app, environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, writableRoleIds, userIdentity],
+    [bundle, app, environment, isOrgAdmin, permissions, workspacePermissions, tenantPermissions, writableRoleIds, userIdentity, orgOptedIn, defaultWorkspace],
   );
+
+  // Keep module-level Kessel mock functions (fetchDefaultWorkspace & co.) in
+  // sync with the current mock state.
+  syncKesselMockState(value);
+
   return <StorybookMockContext.Provider value={value}>{children}</StorybookMockContext.Provider>;
 };
 
