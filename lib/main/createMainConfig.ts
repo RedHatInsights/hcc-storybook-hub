@@ -115,6 +115,16 @@ export function createMainConfig(options: CreateMainConfigOptions = {}) {
         })),
       ];
 
+      // Quickstarts ships require('dompurify') inside its ES module build.
+      // Convert mixed dependency modules so static Storybooks work in browsers.
+      viteConfig.build = {
+        ...viteConfig.build,
+        commonjsOptions: {
+          ...viteConfig.build?.commonjsOptions,
+          transformMixedEsModules: true,
+        },
+      };
+
       return viteConfig;
     },
   };
