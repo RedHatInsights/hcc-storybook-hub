@@ -403,6 +403,15 @@ Wrap `<Story />` with your app's providers inside `HccStorybookProvider`:
 | `docs`          | `{ defaultName: 'Documentation' }`                                    | Storybook docs config                                                                  |
 | `typescript`    | react-docgen-typescript                                               | TypeScript config                                                                      |
 
+### Static build compatibility
+
+The hub enables Vite's `build.commonjsOptions.transformMixedEsModules` for static
+Storybook builds. Dependencies such as PatternFly Quickstarts mix CommonJS
+`require('dompurify')` calls into their ES modules; without conversion, the build
+can succeed but the published Storybook crashes with `require is not defined`.
+Existing build settings and mock aliases are preserved. Consumers using
+`createMainConfig()` do not need a local workaround.
+
 ## What's included
 
 The hub bundles these packages — don't install them separately:
